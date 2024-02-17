@@ -52,7 +52,7 @@ async def description(message: types.Message):
     await bot.delete_message(message.chat.id, message.message_id)
 
 
-# Обработка команды get_schedule_class
+# Обработка команды /get_schedule_class
 @dp.message_handler(commands=['get_schedule_class'])
 async def get_schedule_class(message: types.Message):
     try:
@@ -83,7 +83,7 @@ async def get_schedule_class(message: types.Message):
         await bot.send_sticker(message.chat.id, sticker_id_or_url)
 
 
-# Обработка команды get_schedule_teacher
+# Обработка команды /get_schedule_teacher
 @dp.message_handler(commands=['get_schedule_teacher'])
 async def get_schedule_class(message: types.Message):
     try:
@@ -101,7 +101,7 @@ async def get_schedule_class(message: types.Message):
             return
 
         # Форматирование расписания для отправки в чат
-        formatted_schedule = "\n".join([f"{row[2]}: {row[3]} с {row[4]}" for row in class_schedule])
+        formatted_schedule = "\n".join([f"{row[2]}: {row[3]} с {row[5]}" for row in class_schedule])
 
         await message.answer(f"Расписание для учителя {name}:\n{formatted_schedule}", parse_mode=ParseMode.MARKDOWN)
         sticker_id_or_url = 'CAACAgIAAxkBAAELapllz0oyhLzH7Xe3v-QV1wa2EGe_1wACDiIAAu2aIUh7q0_cAVgmTjQE'
@@ -123,8 +123,8 @@ async def add_subject(message: types.Message):
             args = message.get_args().split(', ')
             if len(args) != 5:
                 raise ValueError("Некорректное количество аргументов. Используйте формат: День, Время, Предмет(Кабинет), Учитель, Класс")
-            sticker_id_or_url = 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE'
-            await bot.send_sticker(message.chat.id, sticker_id_or_url)
+                sticker_id_or_url = 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE'
+                await bot.send_sticker(message.chat.id, sticker_id_or_url)
 
             # Разбор аргументов
             day, time, subject, teacher, class_name = args
