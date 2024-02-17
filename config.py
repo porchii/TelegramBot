@@ -1,0 +1,3 @@
+TOKEN_API = "1"
+admins = [5719110839, 5248119391]
+photo_url = 'CAACAgIAAxkBAAELao9lz0dvx4q1uQJoO2VfTpz1zaeAkAAC8xsAAhSOKUilgjCyi2OkHjQE'
