@@ -1,4 +1,5 @@
 import sqlite3
+
 class ScheduleBot:
     def __init__(self, db_name='schedule.db'):
         self.conn = sqlite3.connect(db_name)
@@ -28,15 +29,10 @@ class ScheduleBot:
         self.conn.commit()
 
     def restore_schedule(self):
-        # Подключение к базе данных
         connection = sqlite3.connect("schedule.db")
         cursor = connection.cursor()
-
-        # SQL-запрос для удаления всех записей из таблицы расписания
         query = "DELETE FROM schedule"
         cursor.execute(query)
-
-        # Применение изменений и закрытие соединения
         connection.commit()
         connection.close()
 
