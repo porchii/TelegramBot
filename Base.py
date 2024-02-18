@@ -1,3 +1,4 @@
+
 import sqlite3
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
@@ -71,7 +72,15 @@ async def get_schedule_class(message: types.Message):
             return
 
         # Форматирование расписания для отправки в чат
-        formatted_schedule = "\n".join([f"{row[2]}: {row[3]} с {row[4]}" for row in class_schedule])
+        formatted_schedule = ""
+        current = 0
+        for i in range(0, len(class_schedule)):
+            if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
+                current+=1
+                formatted_schedule += f"\n{current}: {class_schedule[i][3]}({class_schedule[i][4]}) – {class_schedule[i][2]}"
+            else:
+                formatted_schedule += f"\n({current}): {class_schedule[i][3]}({class_schedule[i][4]}) – {class_schedule[i][2]}"
+
 
         await message.answer(f"Расписание для класса {class_name}:\n{formatted_schedule}", parse_mode=ParseMode.MARKDOWN)
         sticker_id_or_url = 'CAACAgIAAxkBAAELapllz0oyhLzH7Xe3v-QV1wa2EGe_1wACDiIAAu2aIUh7q0_cAVgmTjQE'
@@ -85,12 +94,12 @@ async def get_schedule_class(message: types.Message):
 
 # Обработка команды /get_schedule_teacher
 @dp.message_handler(commands=['get_schedule_teacher'])
-async def get_schedule_class(message: types.Message):
+async def get_schedule_teacher(message: types.Message):
     try:
         # Получение аргумента команды
         name = message.get_args()
 
-        # Получение расписания для класса
+        # Получение расписания для учителя
         class_schedule = schedule_bot.get_schedule('teacher', name)
 
         if not class_schedule:
@@ -101,7 +110,15 @@ async def get_schedule_class(message: types.Message):
             return
 
         # Форматирование расписания для отправки в чат
-        formatted_schedule = "\n".join([f"{row[2]}: {row[3]} с {row[5]}" for row in class_schedule])
+        formatted_schedule = ""
+        current = 0
+        for i in range(0, len(class_schedule)):
+            if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
+                current+=1
+                formatted_schedule += f"\n{current}: {class_schedule[i][3]}({class_schedule[i][5]}) – {class_schedule[i][2]}"
+            else:
+                formatted_schedule += f"\n({current}): {class_schedule[i][3]}({class_schedule[i][5]}) – {class_schedule[i][2]}"
+            
 
         await message.answer(f"Расписание для учителя {name}:\n{formatted_schedule}", parse_mode=ParseMode.MARKDOWN)
         sticker_id_or_url = 'CAACAgIAAxkBAAELapllz0oyhLzH7Xe3v-QV1wa2EGe_1wACDiIAAu2aIUh7q0_cAVgmTjQE'
@@ -112,6 +129,7 @@ async def get_schedule_class(message: types.Message):
         await message.reply(f"Произошла ошибка: {e}")
         sticker_id_or_url = 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE'
         await bot.send_sticker(message.chat.id, sticker_id_or_url)
+
 
 # Обработка команды /add_subject
 @dp.message_handler(commands=['add_subject'])
