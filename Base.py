@@ -4,6 +4,7 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode, ReplyKeyboardRemove
 from io import BytesIO
 import config as cfg
+from tabulate import tabulate
 from database import ScheduleBot
 from newsdata import NewsData
 
@@ -45,75 +46,56 @@ async def description(message: types.Message):
     await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELapRlz0nVHFUTvuAnEsGPFNGbuBTyngACdx8AAm-fIEiZSyIJxulbdjQE')
     await bot.delete_message(message.chat.id, message.message_id)
 
-@dp.message_handler(commands=['get_schedule_class'])
-async def get_schedule_class(message: types.Message):
+async def get_schedule(message: types.Message, class_type: str, class_name: str):
     try:
-        class_name = message.get_args()
         if not class_name:
-            await message.answer("Я не могу выслать ваше расписание, так как Вы его не указали!", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELbgABZdHVHLXsLu4XygYGXzGNXCdLEmsAAl4bAAL5yWFI-Stggz85tSI0BA')
-            await bot.delete_message(message.chat.id, message.message_id)
+            await message.answer("Не указан класс или учитель.", parse_mode=ParseMode.HTML)
             return
-        class_schedule = schedule_bot.get_schedule('class', class_name)
+
+        class_schedule = schedule_bot.get_schedule(class_type, class_name)
 
         if not class_schedule:
-            await message.answer(f"Расписание для класса {class_name} не найдено. 😢", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE')
-            await bot.delete_message(message.chat.id, message.message_id)
+            await message.answer(f"Расписание для {class_name} не найдено. 😢", parse_mode=ParseMode.HTML)
             return
-
-        formatted_schedule = ""
+        table_data = []
         current = 0
-        for i in range(0, len(class_schedule)):
-            if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
-                current += 1
-                formatted_schedule += f"\n<b>{current}:</b> {class_schedule[i][3]}({class_schedule[i][4]}) – {class_schedule[i][2]}"
-            else:
-                formatted_schedule += f"\n<b>({current}):</b> {class_schedule[i][3]}({class_schedule[i][4]}) – {class_schedule[i][2]}"
+        table = tabulate(table_data, headers=["№ урока", "Время", "Предмет", "Учитель", "Класс"], tablefmt="pretty")
+        if (class_type == 'teacher'):
+            for i in range(0, len(class_schedule)):
+                if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
+                    current += 1
+                table_data.append((current, class_schedule[i][2], class_schedule[i][3], class_schedule[i][5]))
+            table = tabulate(table_data, headers=["№ урока", "Время", "Предмет", "Класс"], tablefmt="pretty")
 
-        await message.answer(f"Расписание для класса {class_name}:\n{formatted_schedule}", parse_mode=ParseMode.HTML)
-        await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELapllz0oyhLzH7Xe3v-QV1wa2EGe_1wACDiIAAu2aIUh7q0_cAVgmTjQE')
-        await bot.delete_message(message.chat.id, message.message_id)
+
+        if (class_type == 'class'):
+            for i in range(0, len(class_schedule)):
+                if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
+                    current += 1
+                table_data.append((current, class_schedule[i][2], class_schedule[i][3]))
+            table = tabulate(table_data, headers=["№ урока", "Время", "Предмет"], tablefmt="pretty")
+
+        
+        await message.answer(f"Расписание для {class_name}:\n{table}", parse_mode=ParseMode.MARKDOWN)
+
 
     except Exception as e:
         await message.reply(f"Произошла ошибка: {e}", parse_mode=ParseMode.HTML)
-        await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE')
+
+
+@dp.message_handler(commands=['get_schedule_class'])
+async def get_schedule_class(message: types.Message):
+    class_name = message.get_args()
+    await get_schedule(message, 'class', class_name)
+    await bot.delete_message(message.chat.id, message.message_id)
+    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELcQABZdNuH9C6OyaLCaw2a1icjjWvS5cAAgUfAAL3nSFIqimHNJCOFnY0BA')
 
 @dp.message_handler(commands=['get_schedule_teacher'])
 async def get_schedule_teacher(message: types.Message):
-    try:
-        name = message.get_args()
-        if not name:
-            await message.answer("Я не могу выслать ваше расписание, так как Вы его не указали!", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELbgABZdHVHLXsLu4XygYGXzGNXCdLEmsAAl4bAAL5yWFI-Stggz85tSI0BA')
-            await bot.delete_message(message.chat.id, message.message_id)
-            return
-        class_schedule = schedule_bot.get_schedule('teacher', name)
-
-        if not class_schedule:
-            await message.answer(f"Расписание для учителя {name} не найдено. 😢", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE')
-            await bot.delete_message(message.chat.id, message.message_id)
-            return
-
-        formatted_schedule = ""
-        current = 0
-        for i in range(0, len(class_schedule)):
-            if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
-                current += 1
-                formatted_schedule += f"<b>{current}:</b> {class_schedule[i][3]}({class_schedule[i][5]}) – {class_schedule[i][2]}\n"
-            else:
-                formatted_schedule += f"<b>({current}):</b> {class_schedule[i][3]}({class_schedule[i][5]}) – {class_schedule[i][2]}\n"
-
-        formatted_message = f"<b>Расписание для учителя {name}:</b>\n{formatted_schedule}"
-
-        await message.answer(formatted_message, parse_mode=ParseMode.HTML)
-        await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELapllz0oyhLzH7Xe3v-QV1wa2EGe_1wACDiIAAu2aIUh7q0_cAVgmTjQE')
-        await bot.delete_message(message.chat.id, message.message_id)
-
-    except Exception as e:
-        await message.reply(f"Произошла ошибка: {e}", parse_mode=ParseMode.HTML)
-        await bot.send_sticker(message.chat.id, 'CAACagIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE')
+    teacher_name = message.get_args()
+    await get_schedule(message, 'teacher', teacher_name)
+    await bot.delete_message(message.chat.id, message.message_id)
+    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELcQABZdNuH9C6OyaLCaw2a1icjjWvS5cAAgUfAAL3nSFIqimHNJCOFnY0BA')
 
 @dp.message_handler(commands=['add_subject'])
 async def add_subject(message: types.Message):
