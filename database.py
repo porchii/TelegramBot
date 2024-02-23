@@ -14,15 +14,16 @@ class ScheduleBot:
                 time TEXT,
                 subject TEXT,
                 teacher TEXT,
-                class TEXT
+                class_name TEXT
             )
         ''')
         self.conn.commit()
 
     def add_subject(self, day, time, subject, teacher, class_name):
-        self.cursor.execute("INSERT INTO schedule (day, time, subject, teacher, class) VALUES (?, ?, ?, ?, ?)",
+        self.cursor.execute("INSERT INTO schedule (day, time, subject, teacher, class_name) VALUES (?, ?, ?, ?, ?)",
                             (day, time, subject, teacher, class_name))
         self.conn.commit()
+
 
     def remove_subject(self, subject_id):
         self.cursor.execute("DELETE FROM schedule WHERE id=?", (subject_id,))
@@ -38,7 +39,7 @@ class ScheduleBot:
 
     def get_schedule(self, user_type, user_name):
         if user_type == 'class':
-            self.cursor.execute("SELECT * FROM schedule WHERE class=?", (user_name,))
+            self.cursor.execute("SELECT * FROM schedule WHERE class_name=?", (user_name,))
         elif user_type == 'teacher':
             self.cursor.execute("SELECT * FROM schedule WHERE teacher=?", (user_name,))
         else:

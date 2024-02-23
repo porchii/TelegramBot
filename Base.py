@@ -1,4 +1,5 @@
 import sqlite3
+import telegram
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode, ReplyKeyboardRemove
@@ -6,12 +7,14 @@ from io import BytesIO
 import config as cfg
 from tabulate import tabulate
 from database import ScheduleBot
+from teachers_ import Teachers
 from newsdata import NewsData
 
 bot = Bot(cfg.TOKEN_API)
 dp = Dispatcher(bot)
 schedule_bot = ScheduleBot()
 newsdata_bot = NewsData()
+teacher_subjects = Teachers()
 
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
@@ -56,16 +59,16 @@ async def get_schedule(message: types.Message, class_type: str, class_name: str)
 
         if not class_schedule:
             await message.answer(f"Расписание для {class_name} не найдено. 😢", parse_mode=ParseMode.HTML)
+            bot.send_sticker(message.chat.id, '')
             return
         table_data = []
         current = 0
-        table = tabulate(table_data, headers=["№ урока", "Время", "Предмет", "Учитель", "Класс"], tablefmt="pretty")
         if (class_type == 'teacher'):
             for i in range(0, len(class_schedule)):
                 if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
                     current += 1
                 table_data.append((current, class_schedule[i][2], class_schedule[i][3], class_schedule[i][5]))
-            table = tabulate(table_data, headers=["№ урока", "Время", "Предмет", "Класс"], tablefmt="pretty")
+            table = tabulate(table_data, headers=["№", "Время", "Предмет", "Класс"], tablefmt="pretty")
 
 
         if (class_type == 'class'):
@@ -73,10 +76,10 @@ async def get_schedule(message: types.Message, class_type: str, class_name: str)
                 if (i == 0 or class_schedule[i - 1][2] != class_schedule[i][2]):
                     current += 1
                 table_data.append((current, class_schedule[i][2], class_schedule[i][3]))
-            table = tabulate(table_data, headers=["№ урока", "Время", "Предмет"], tablefmt="pretty")
+            table = tabulate(table_data, headers=["№", "Время", "Предмет"], tablefmt="pretty")
 
-        
-        await message.answer(f"Расписание для {class_name}:\n{table}", parse_mode=ParseMode.MARKDOWN)
+        code_block = f"```\n{table}\n```"
+        await message.answer(f"Расписание для {class_name}:\n{code_block}", parse_mode=ParseMode.MARKDOWN)
 
 
     except Exception as e:
@@ -88,14 +91,14 @@ async def get_schedule_class(message: types.Message):
     class_name = message.get_args()
     await get_schedule(message, 'class', class_name)
     await bot.delete_message(message.chat.id, message.message_id)
-    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELcQABZdNuH9C6OyaLCaw2a1icjjWvS5cAAgUfAAL3nSFIqimHNJCOFnY0BA')
+    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELeeFl2Hpvjs_Jept9orjqQrh4LzMAAXcAAvMbAAIUjilIpYIwsotjpB40BA')
 
 @dp.message_handler(commands=['get_schedule_teacher'])
 async def get_schedule_teacher(message: types.Message):
     teacher_name = message.get_args()
     await get_schedule(message, 'teacher', teacher_name)
     await bot.delete_message(message.chat.id, message.message_id)
-    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELcQABZdNuH9C6OyaLCaw2a1icjjWvS5cAAgUfAAL3nSFIqimHNJCOFnY0BA')
+    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELeeFl2Hpvjs_Jept9orjqQrh4LzMAAXcAAvMbAAIUjilIpYIwsotjpB40BA')
 
 @dp.message_handler(commands=['add_subject'])
 async def add_subject(message: types.Message):
