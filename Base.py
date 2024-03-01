@@ -8,6 +8,7 @@ import config as cfg
 from tabulate import tabulate
 from database import ScheduleBot
 from teachers_ import Teachers
+import pyexcel_ods3
 from newsdata import NewsData
 
 bot = Bot(cfg.TOKEN_API)
@@ -24,13 +25,13 @@ async def start_command(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def help_command(message: types.Message):
-    await message.answer("<b>Доступные Вам команды:</b>\n" \
+    await message.answer("<b>Доступные команды:</b>\n" \
                          "/start - Начать взаимодействие с ботом.\n" \
                          "/help - Получить список доступных команд и их описания.\n" \
                          "/description - Описание бота\n" \
                          "/get_schedule_class [Класс(Формат: 10.2)] - Получить расписание для класса.\n" \
                          "/get_schedule_teacher [Ф.И.О(Формат(Фамилия_И_О))] - Получить расписание для учителя.\n" \
-                         "/add_subject [День недели, Время, Предмет(Кабинет), Учитель, Класс] - Добавить урок в расписание.\n" \
+                         "/create_new_schedule - Обновление расписания в соответствии с таблицей.\n" \
                          "/clear - Очистить таблицу\n" \
                          "/get_news - Получить список свежих новостей.\n" \
                          "/add_news [заголовок] [текст] - Добавить новость.\n" \
@@ -59,7 +60,6 @@ async def get_schedule(message: types.Message, class_type: str, class_name: str)
 
         if not class_schedule:
             await message.answer(f"Расписание для {class_name} не найдено. 😢", parse_mode=ParseMode.HTML)
-            bot.send_sticker(message.chat.id, '')
             return
         table_data = []
         current = 0
@@ -100,25 +100,16 @@ async def get_schedule_teacher(message: types.Message):
     await bot.delete_message(message.chat.id, message.message_id)
     await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELeeFl2Hpvjs_Jept9orjqQrh4LzMAAXcAAvMbAAIUjilIpYIwsotjpB40BA')
 
-@dp.message_handler(commands=['add_subject'])
-async def add_subject(message: types.Message):
+@dp.message_handler(commands=['create_new_schedule'])
+async def create_new_schedule_command(message: types.Message):
     if message.from_user.id in cfg.admins:
-        try:
-            args = message.get_args().split(', ')
-            if len(args) != 5:
-                raise ValueError("Некорректное количество аргументов. Используйте формат: День, Время, Предмет(Кабинет), Учитель, Класс")
-            day, time, subject, teacher, class_name = args
-            schedule_bot.add_subject(day, time, subject, teacher, class_name)
-            await message.reply(f"Урок успешно добавлен в расписание. 👍", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELaqFlz0uwJpYufw-JYezwOdyqu_vruwACuhcAAp2oKUixWf4JiHIfqjQE')
-
-        except Exception as e:
-            await message.reply(f"Произошла ошибка: {e}", parse_mode=ParseMode.HTML)
-            await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELaptlz0ppZknK8J9E1b6dt8-7rb41GwACISQAAofCIUi_1SPKkGeBgzQE')
+        schedule_bot.create_new_schedule()
+        await message.reply('Новое расписание успешно создано! 🗓️', parse_mode=ParseMode.HTML)
     else:
         await message.answer("У тебя нет прав на выполнение этой команды. 😠", parse_mode=ParseMode.HTML)
         await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELbgABZdHVHLXsLu4XygYGXzGNXCdLEmsAAl4bAAL5yWFI-Stggz85tSI0BA')
         await bot.delete_message(message.from_user.id, message.message_id)
+
 
 @dp.message_handler(commands=['clear'])
 async def clear(message: types.Message):
