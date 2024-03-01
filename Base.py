@@ -91,7 +91,6 @@ async def get_schedule_class(message: types.Message):
     class_name = message.get_args()
     await get_schedule(message, 'class', class_name)
     await bot.delete_message(message.chat.id, message.message_id)
-    await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELeeFl2Hpvjs_Jept9orjqQrh4LzMAAXcAAvMbAAIUjilIpYIwsotjpB40BA')
 
 @dp.message_handler(commands=['get_schedule_teacher'])
 async def get_schedule_teacher(message: types.Message):
