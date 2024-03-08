@@ -1,3 +1,4 @@
 TOKEN_API = "1"
 admins = [5719110839, 5248119391]
-photo_url = 'CAACAgIAAxkBAAELao9lz0dvx4q1uQJoO2VfTpz1zaeAkAAC8xsAAhSOKUilgjCyi2OkHjQE'
+chat_all_id = -1002020566398
+class_chats = {'10.1': "@schedule10_1", '10.2': "@schedule10_2"}
