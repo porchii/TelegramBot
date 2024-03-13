@@ -5,6 +5,7 @@ import threading
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode, ReplyKeyboardRemove
+from aiogram.types import InputFile
 from io import BytesIO
 import config as cfg
 from tabulate import tabulate
@@ -24,8 +25,8 @@ newsdata_bot = NewsData()
 teacher_subjects = Teachers()
 
 async def good_morning():
-    await bot.send_message(cfg.class_chats['10.1'], 'Доброе утро, пусть день твой наполнится улыбками и радостью! 🌅✨')
-    await bot.send_message(cfg.class_chats['10.2'], 'Доброе утро, пусть день твой наполнится улыбками и радостью! 🌅✨')
+    await bot.send_message(cfg.class_chats['10.1'], 'Доброе утро! 📚✨ Пусть этот день будет насыщенным знаниями и успешными открытиями! 💪🌅 Удачи в учебе! 🚀')
+    await bot.send_message(cfg.class_chats['10.2'], 'Доброе утро! 📚✨ Пусть этот день будет насыщенным знаниями и успешными открытиями! 💪🌅 Удачи в учебе! 🚀')
 
 async def on_startup(dp):
     print("Да!")
@@ -48,7 +49,8 @@ async def help_command(message: types.Message):
                          "<b>/clear</b> - <i>Очистить таблицу</i>\n" \
                          "<b>/news</b> - <i>Получить список свежих новостей.</i>\n" \
                          "<b>/add_news</b> [заголовок] [текст] - <i>Добавить новость.</i>\n" \
-                         "<b>/clear_news</b> - <i>Очистить список новостей.</i>", parse_mode=ParseMode.HTML)
+                         "<b>/clear_news</b> - <i>Очистить список новостей.</i>\n" \
+                         "<b>/photo</b> - <i>Отправить фото в каналы с расписанием.</i>\n", parse_mode=ParseMode.HTML)
     await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELmI9l4zkafaYNlBuzqJDvRB2ahn-P-QACMiYAAn8ZKEpL8r0dbah9sTQE')
     await bot.delete_message(message.chat.id, message.message_id)
 
@@ -123,7 +125,7 @@ async def create_new_schedule():
     )
     aioschedule.every().day.at('07:00').do(send_good_morning)
     for i in range(len(rows) - 1):
-        if rows[i + 1][5] == rows[i + 1][5]:
+        if rows[i + 1][5] == rows[i][5]:
             reminder_partial = functools.partial(
                 reminde,
                 subject=rows[i + 1][3],
@@ -146,8 +148,6 @@ async def update(message: types.Message):
         await create_new_schedule()
         await print_all_jobs()
         await message.reply('Новое расписание успешно создано! 🗓️', parse_mode=ParseMode.HTML)
-        await bot.send_message(cfg.class_chats['10.1'], await get_schedule(message, 'class', '10.1'), parse_mode=ParseMode.MARKDOWN)
-        await bot.send_message(cfg.class_chats['10.2'], await get_schedule(message, 'class', '10.2'), parse_mode=ParseMode.MARKDOWN)
     else:
         await message.answer("У тебя нет прав на выполнение этой команды. 😠", parse_mode=ParseMode.HTML)
         await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELmJNl4zlg8dOwXM90YWxGA5IgbjhiYAACHyEAAld_KEosM1AOHIFh3jQE')
@@ -208,6 +208,27 @@ async def clear_news(message: types.Message):
         await bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAELmJVl4zn1Sv9hUyEo8QLGGkB6_Jq9mwACZSYAAmgMKEpujN9gfJg6njQE')
         await bot.delete_message(message.chat.id, message.message_id)
 
+@dp.message_handler(commands=['run'])
+async def run_command(message: types.Message):
+    await bot.send_message(cfg.class_chats['10.1'], await get_schedule(message, 'class', '10.1'), parse_mode=ParseMode.MARKDOWN)
+    await bot.send_message(cfg.class_chats['10.2'], await get_schedule(message, 'class', '10.2'), parse_mode=ParseMode.MARKDOWN)
+
+@dp.message_handler(content_types=['photo'])
+async def photo_command(message: types.Message):   
+    if message.get_command():
+        if message.from_user.id not in cfg.admins:
+            await message.answer("У Вас нет прав на выполнение этой команды. 😠", parse_mode=ParseMode.HTML)
+        else:
+            photo = message.photo[-1]
+            for class_chat_id in [cfg.class_chats['10.1'], cfg.class_chats['10.2']]:
+                await bot.send_photo(chat_id=class_chat_id, photo=photo.file_id)
+            await message.answer("Фото успешно отправлено в чаты 10.1 и 10.2 классов.")
+
+
+
+
+
+
 
 loop = asyncio.get_event_loop()
 
@@ -218,7 +239,7 @@ async def scheduled_job():
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.create_task(create_new_schedule())
+    loop.create_task(create_new_schedule()) 
     loop.create_task(scheduled_job())
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
     loop.run_forever()
