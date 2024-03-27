@@ -3,7 +3,6 @@ import telegram
 import aioschedule
 import threading
 from aiogram import Bot, Dispatcher, types, executor
-from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode, ReplyKeyboardRemove
 from aiogram.types import InputFile
 from io import BytesIO
@@ -210,8 +209,8 @@ async def clear_news(message: types.Message):
 
 @dp.message_handler(commands=['run'])
 async def run_command(message: types.Message):
-    await bot.send_message(cfg.class_chats['10.1'], await get_schedule(message, 'class', '10.1'), parse_mode=ParseMode.MARKDOWN)
-    await bot.send_message(cfg.class_chats['10.2'], await get_schedule(message, 'class', '10.2'), parse_mode=ParseMode.MARKDOWN)
+    for class_name in cfg.class_chats:
+        await bot.send_message(cfg.class_chats[class_name], await get_schedule(message, 'class', class_name), parse_mode=ParseMode.MARKDOWN)
 
 @dp.message_handler(content_types=['photo'])
 async def photo_command(message: types.Message):   
