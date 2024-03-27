@@ -24,8 +24,8 @@ newsdata_bot = NewsData()
 teacher_subjects = Teachers()
 
 async def good_morning():
-    await bot.send_message(cfg.class_chats['10.1'], 'Доброе утро! 📚✨ Пусть этот день будет насыщенным знаниями и успешными открытиями! 💪🌅 Удачи в учебе! 🚀')
-    await bot.send_message(cfg.class_chats['10.2'], 'Доброе утро! 📚✨ Пусть этот день будет насыщенным знаниями и успешными открытиями! 💪🌅 Удачи в учебе! 🚀')
+    for class_name in cfg.class_chats:
+        await bot.send_message(cfg.class_chats[class_name], 'Доброе утро! 📚✨ Пусть этот день будет насыщенным знаниями и успешными открытиями! 💪🌅 Удачи в учебе! 🚀')
 
 async def on_startup(dp):
     print("Да!")
@@ -236,4 +236,3 @@ if __name__ == '__main__':
     loop.create_task(scheduled_job())
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
     loop.run_forever()
-
