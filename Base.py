@@ -223,12 +223,6 @@ async def photo_command(message: types.Message):
                 await bot.send_photo(chat_id=class_chat_id, photo=photo.file_id)
             await message.answer("Фото успешно отправлено в чаты 10.1 и 10.2 классов.")
 
-
-
-
-
-
-
 loop = asyncio.get_event_loop()
 
 async def scheduled_job():
